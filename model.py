@@ -68,9 +68,15 @@ def primerjaj_karti(karta1, karta2):
             return karta2
 
 def zmagovalni_igralec():
-    zmagovalka = Kup[igralecVR(0)]
-    for x in Igralci:
-        zmagovalka = primerjaj_karti(zmagovalka, Kup[x])
+    karte = []      # Optimiziraj s tem da preveris ce je bila vsaj ena od teh kart igrana
+    for z in Igralci:
+        karte.append(Kup[z])
+    if 1 in karte and 21 in karte and 22 in karte:
+        zmagovalka = 1
+    else:
+        zmagovalka = Kup[igralecVR(0)]
+        for x in Igralci:
+            zmagovalka = primerjaj_karti(zmagovalka, Kup[x])
     for y in Igralci:
         if Kup[y] == zmagovalka:
             return y
@@ -79,6 +85,6 @@ def zmagovalni_igralec():
 
 
 
-Mitja = Igralec([1, 22, 14, 27, 33, 36, 38], "Mitja")
-Andrej = Igralec([12, 15, 28, 26, 54, 7], "Andrej")
-Maja = Igralec([5, 6, 18, 34, 39], "Maja")
+Mitja = Igralec([1, 20, 14, 27, 33, 36, 38], "Mitja")
+Andrej = Igralec([21, 12, 15, 28, 26, 54, 7], "Andrej")
+Maja = Igralec([22, 5, 6, 18, 34, 39], "Maja")
