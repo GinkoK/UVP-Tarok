@@ -1,4 +1,5 @@
 import json
+import random
 
 Talon = []      # Talon je seznam nastavljen pred zacetkom igre
 Kup = {}        # Slovar kart in igralcev ki so jih igrali, vsak krog se resetira na prazen slovar
@@ -80,6 +81,48 @@ def zmagovalni_igralec():
     for y in Igralci:
         if Kup[y] == zmagovalka:
             return y
+
+def delitev_kart():
+    global Talon
+    vse_karte = [n for n in range(1, 55)]
+    random.shuffle(vse_karte)
+    i = 0
+    kolicina = (54 - 6) // len(Igralci)
+    for oseba in Igralci:
+        oseba.roka = vse_karte[kolicina*i: kolicina*(i+1)]
+        i += 1
+    Talon = vse_karte[-6:]
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
