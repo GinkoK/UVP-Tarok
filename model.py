@@ -110,6 +110,14 @@ def delitev_kart():
         i += 1
     Talon = vse_karte[-6:]
 
+def delitev_talona(igra):       # Zacasna funkcija, dopolni ko bos dodal ostale igre
+    if igra == 1:
+        return 3
+    if igra == 2:
+        return 2
+    if igra == 3:
+        return 1
+
 def del_talona(n, k):       # n je stevilo delov talona, k je izbran del
     return Talon[k*n: (k+1)*n]
 

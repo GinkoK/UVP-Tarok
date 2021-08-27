@@ -11,15 +11,30 @@ def izbira_igre(prejsnja, igralec):
         print('To ni dovoljen odgovor.')
         return izbira_igre(prejsnja, igralec)
 
-
+def prikaz_talona(igra):
+    presek_talona = m.delitev_talona(igra[1])
+    prikaz_talona = ''
+    for k in range(6 // presek_talona):
+        por = m.del_talona(presek_talona, k)
+        for j in range(presek_talona):
+            prikaz_talona += str(por[j])
+            if j != (presek_talona - 1):
+                prikaz_talona += ', '
+        if k != ((6 // presek_talona) -1):
+            prikaz_talona += ';   '
+    return prikaz_talona
 
 def zacetek():
-    stevilo = len(m.Igralci)
+    stevilo_igralcev = len(m.Igralci)
     m.delitev_kart()
     igra = [m.Igralci[0],0]
     for oseba in m.Igralci:
         igra = izbira_igre(igra, oseba)
-    return igra
+    moznosti = prikaz_talona(igra)
+    print(moznosti)
+    izbira_talona = input('Pred tabo je talon, izberi karte.')
+    
+
 
 Andrej = m.Igralec("Andrej")
 Maja = m.Igralec("Maja")
