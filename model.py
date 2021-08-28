@@ -11,6 +11,7 @@ class Igralec:
         self.roka = []                  # Seznam kart, t.j. stevilk od 1 do 54, ki jih igralec drzi v roki.
         self.ime = ime                  # Ime igralca je niz, sluzi le za prikaz in shranjevanje podatkov, v igri se ne uporablja.
         self.pobrane = []
+        self.rufan = False
         Igralci.append(self)
 
     def __repr__(self):
@@ -80,7 +81,7 @@ def primerjaj_karti(karta1, karta2):
         else:
             return karta2
 
-def zmagovalni_igralec():
+def zmagovalni_igralec():       # Preveri karte iz Kupa
     karte = []      # Optimiziraj s tem da preveris ce je bila vsaj ena od teh kart igrana
     for z in Igralci:
         karte.append(Kup[z])
@@ -99,6 +100,8 @@ def zmagovalni_igralec():
 
 # Funkcije namenjene zacetku igre.
 
+    # Funkcije za razdeliti karte med igralce.
+
 def delitev_kart():
     global Talon
     vse_karte = [n for n in range(1, 55)]
@@ -110,13 +113,28 @@ def delitev_kart():
         i += 1
     Talon = vse_karte[-6:]
 
-def delitev_talona(igra):       # Zacasna funkcija, dopolni ko bos dodal ostale igre
-    if igra == 1:
+    # Funkcije za prikaz in deljenje talona.
+
+def delitev_talona(igra):       # Zacasna funkcija, dopolni ko bos dodal ostale igre!!!!!
+    if igra[1] == 1:
         return 3
-    if igra == 2:
+    if igra[1] == 2:
         return 2
-    if igra == 3:
+    if igra[1] == 3:
         return 1
+
+def prikaz_talona(igra):
+    presek_talona = delitev_talona(igra)
+    prikaz_talona = ''
+    for k in range(6 // presek_talona):
+        por = del_talona(presek_talona, k)
+        for j in range(presek_talona):
+            prikaz_talona += str(por[j])
+            if j != (presek_talona - 1):
+                prikaz_talona += ', '
+        if k != ((6 // presek_talona) -1):
+            prikaz_talona += ';   '
+    return prikaz_talona
 
 def del_talona(n, k):       # n je stevilo delov talona, k je izbran del
     return Talon[k*n: (k+1)*n]
@@ -126,13 +144,26 @@ def ostali_talon(n, k):
     for j in del_talona(n,k):
         Talon.remove(j)
     return Talon
-        
-def talon_igra(rufer, n, k, kralj):
-    rufer.doda_karte(del_talona(n,k))
+
+def spremeni_talon(igra, k):
+    global Talon
+    nov_talon = []
+    for j in range(igra[1]):
+        if j != k:
+            nov_talon.extend(del_talona(igra[1], j))
+    Talon = nov_talon
+
+
+def talon_prevzem(rufer, n, k): # NA KONCU NAJ UGOTOVI A JE VALAT AL SE JE ZARUFU IN POBRAL KRALJA, DRUGACE DOBI NASPROTNIK VALATA
     for oseba in Igralci:
-        if oseba != rufer and kralj not in oseba.roka:
+        if oseba != rufer and oseba.rufan != 1:
             oseba.pobere_talon()
             break
+
+def legaln_polog(igra, karta): # NAPISI DEJANSKO FUNKCIJO
+    return True
+
+    # Funkcije za izbiro igre na zacetku
 
 def prioritetni_igralec(prvi, drugi):
     if Igralci.index(drugi) == (len(Igralci) - 1):
@@ -144,7 +175,7 @@ def prioritetni_igralec(prvi, drugi):
             return drugi
 
 
-def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in igre (npr. [Andrej, 2])
+def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in igre (npr. [Andrej, 2]), funkcije najde kdo ima prednost za izbiro igre na zacetku
     if prva[1] == 0:
         return druga
     elif druga[1] == 0:
@@ -158,6 +189,21 @@ def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in ig
     else:
         return druga
 
+    # Funkcije za rufanje kralja
+
+def ima_rufanje(igra):      # Zacasna funkcija, dopolni za vse igre!!!!!!
+    return True
+
+def karta_v_stevilko(ime):      # Zacasna funkcija, izbrisi pol
+    if ime.lower() == "src":
+        return 1
+    if ime.lower() == "kara":
+        return 2
+    if ime.lower() == "pik":
+        return 3
+    if ime.lower() == "kriz":
+        return 4
+    
 
 
 
