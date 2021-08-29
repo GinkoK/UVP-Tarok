@@ -12,22 +12,23 @@ class Igralec:
         self.ime = ime                  # Ime igralca je niz, sluzi le za prikaz in shranjevanje podatkov, v igri se ne uporablja.
         self.pobrane = []
         self.rufan = False
+        self.ima_monda = False      # Na koncu se sprehodi cez vse pobrane v korakih po 4 ali 3 ce imajo monda in skisa in ne palcke in odstej tocke temu igralcu
+        self.ima_skisa = False      # Podobno kot zgoraj ampak za celo trulo
         Igralci.append(self)
 
     def __repr__(self):
         return self.ime
         
     
-    def vzame_karto(self, stevilka):
-        del self.roka[stevilka]
+    def vzame_karto(self, karta):
+        self.roka.remove(karta)
 
     def doda_karte(self, karte):
         self.roka.extend(karte)
     
     def igra(self, karta):
-        igrana = self.roka[karta]
         self.vzame_karto(karta)
-        Kup[self] = igrana
+        Kup[self] = karta
 
     def pobere(self):
         global Kup
@@ -41,14 +42,9 @@ class Igralec:
         Talon = []
 
 
+# Funkcije namenjene sam igri
 
-def igralecVR(n):
-    return Igralci[n]
-
-
-
-
-# Funkcije ki so namenjene dolocanju zmagovlca kroga.
+    # Funkcije ki so namenjene dolocanju zmagovlca kroga.
 
 def tip_karte(karta):
     if karta <= 22:
@@ -88,7 +84,7 @@ def zmagovalni_igralec():       # Preveri karte iz Kupa
     if 1 in karte and 21 in karte and 22 in karte:
         zmagovalka = 1
     else:
-        zmagovalka = Kup[igralecVR(0)]
+        zmagovalka = Kup[Igralci[0]]
         for x in Igralci:
             zmagovalka = primerjaj_karti(zmagovalka, Kup[x])
     for y in Igralci:
@@ -96,6 +92,18 @@ def zmagovalni_igralec():       # Preveri karte iz Kupa
             return y
 
 
+    # Funkcije namenjene sami igri
+
+def vrstni_red(zacne):
+    n = len(Igralci)
+    indeks = Igralci.index(zacne) + 1
+    Vrstni_red = [zacne]
+    for i in range(n-1):
+        Vrstni_red.append(Igralci[(indeks + i) % n])
+    return Vrstni_red
+
+def legalna_izbira(prva, oseba, izbira):        # ZACASNA FUNKCIJA, DOPOLNI KASNEJE
+    return True
 
 
 # Funkcije namenjene zacetku igre.
@@ -115,7 +123,7 @@ def delitev_kart():
 
     # Funkcije za prikaz in deljenje talona.
 
-def delitev_talona(igra):       # Zacasna funkcija, dopolni ko bos dodal ostale igre!!!!!
+def delitev_talona(igra):       # ZACASNA FUNKCIJA, dopolni ko bos dodal ostale igre!!!!!
     if igra[1] == 1:
         return 3
     if igra[1] == 2:
@@ -123,7 +131,7 @@ def delitev_talona(igra):       # Zacasna funkcija, dopolni ko bos dodal ostale 
     if igra[1] == 3:
         return 1
 
-def prikaz_talona(igra):
+def prikaz_talona(igra):        # ZACASNA FUNKCIJA
     presek_talona = delitev_talona(igra)
     prikaz_talona = ''
     for k in range(6 // presek_talona):
@@ -163,6 +171,8 @@ def talon_prevzem(rufer, n, k): # NA KONCU NAJ UGOTOVI A JE VALAT AL SE JE ZARUF
 def legaln_polog(igra, karta): # NAPISI DEJANSKO FUNKCIJO
     return True
 
+
+
     # Funkcije za izbiro igre na zacetku
 
 def prioritetni_igralec(prvi, drugi):
@@ -189,10 +199,15 @@ def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in ig
     else:
         return druga
 
+
+
     # Funkcije za rufanje kralja
 
 def ima_rufanje(igra):      # Zacasna funkcija, dopolni za vse igre!!!!!!
-    return True
+    if len(Igralci) == 4: 
+        return True
+    else:
+        return False
 
 def karta_v_stevilko(ime):      # Zacasna funkcija, izbrisi pol
     if ime.lower() == "src":
@@ -204,7 +219,6 @@ def karta_v_stevilko(ime):      # Zacasna funkcija, izbrisi pol
     if ime.lower() == "kriz":
         return 4
     
-
 
 
 
