@@ -4,7 +4,7 @@ import random
 Talon = []      # Talon je seznam nastavljen pred zacetkom igre
 Kup = {}        # Slovar kart in igralcev ki so jih igrali, vsak krog se resetira na prazen slovar
 Igralci = []    # Seznam igralcev, v vrstnem redu
-Porufani = None
+Napovedi = []
 
 class Igralec:
     def __init__(self, ime):
@@ -12,8 +12,12 @@ class Igralec:
         self.ime = ime                  # Ime igralca je niz, sluzi le za prikaz in shranjevanje podatkov, v igri se ne uporablja.
         self.pobrane = []
         self.rufan = False
+        self.kralj = 0
         self.ima_monda = False      # Na koncu se sprehodi cez vse pobrane v korakih po 4 ali 3 ce imajo monda in skisa in ne palcke in odstej tocke temu igralcu
-        self.ima_skisa = False      # Podobno kot zgoraj ampak za celo trulo
+        self.ima_skisa = False
+        self.vrsta_igre = 0      # Podobno kot zgoraj ampak za celo trulo
+        self.pobran_pagat = False
+        self.pobran_kralj = False
         Igralci.append(self)
 
     def __repr__(self):
@@ -42,7 +46,7 @@ class Igralec:
         Talon = []
 
 
-# Funkcije namenjene sam igri
+# Funkcije namenjene sami igri
 
     # Funkcije ki so namenjene dolocanju zmagovlca kroga.
 
@@ -168,6 +172,17 @@ def talon_prevzem(rufer, n, k): # NA KONCU NAJ UGOTOVI A JE VALAT AL SE JE ZARUF
             oseba.pobere_talon()
             break
 
+def stevilo_zalozenih(igra):
+    izbira = igra[1]
+    if izbira == 1 or izbira == 4:
+        return 3
+    if izbira == 2 or izbira == 5:
+        return 2
+    if izbira == 3 or izbira == 6:
+        return 1
+    else:
+        return 0
+
 def legaln_polog(igra, karta): # NAPISI DEJANSKO FUNKCIJO
     return True
 
@@ -220,18 +235,121 @@ def karta_v_stevilko(ime):      # Zacasna funkcija, izbrisi pol
         return 4
     
 
+# Konec igre
+
+def vrednost_karte(karta):
+    if karta == 1 or karta == 21 or karta == 22:
+        return 5
+    elif karta < 21:
+        return 1
+    elif karta % 8 >= 3 and karta % 8 <= 6:
+        return (karta % 8) - 1
+    else:
+        return 1
 
 
+def tocke():
+    tocke = 0
+    karte_za_stet = []
+    for oseba in Igralci:
+        if oseba.rufan == 1:
+            karte_za_stet.extend(oseba.pobrane)
+    for karta in karte_za_stet:
+        tocke += vrednost_karte(karta)
+    tocke = tocke - (2 * (len(karte_za_stet) // 3))
+    if len(karte_za_stet) % 3 != 0:
+        tocke = tocke - 1
+    if tocke > 35 or (tocke == 35 and len(karte_za_stet) % 3 > 0):
+        zmaga = True
+    else:
+        zmaga = False
+    return [zmaga, 5*round(tocke/5)]
 
+def napovedan_bonus(napoved):
+    if napoved in Napovedi:
+        return 2
+    else:
+        return 1
 
+def vrednost_igre():
+    for oseba in Igralci:
+        izbira = oseba.vrsta_igre
+        if izbira != 0:
+            if izbira == 1: # Tri
+                return 10 * napovedan_bonus(izbira)
+            if izbira == 2: # Dva
+                return 20 * napovedan_bonus(izbira)
+            if izbira == 3: # Ena
+                return 30 * napovedan_bonus(izbira)
+            if izbira == 4: # Solo tri
+                return 40 * napovedan_bonus(izbira)
+            if izbira == 5: # Solo dva
+                return 50 * napovedan_bonus(izbira)
+            if izbira == 6: # Solo ena
+                return 60 * napovedan_bonus(izbira)
+            if izbira == 7: # Solo brez
+                return 70 * napovedan_bonus(izbira)
+            if izbira == 8: # Berac
+                return 80 * napovedan_bonus(izbira)
+    return 0
 
+def igra_ima_tocke():
+    for oseba in Igralci:
+        izbira = oseba.vrsta_igre
+        if izbira != 0:
+            if izbira <= 6:
+                return True
+            else:
+                return False
+    return False
 
+def preveri_valat():
+    karte = []
+    for oseba in Igralci:
+        if oseba.rufan == False:
+            karte += oseba.pobrane
+    if len(karte) == 0:
+        return True
+    else:
+        return False
+def dodeli_talon():
+    global Talon
+    kartarji = []
+    if len(Igralci) == 3:
+        pass
+    for oseba in Igralci:
+        if oseba.rufan == True:
+            kartarji.append(oseba)
+            kralj = oseba.kralj
+    if (len(kartarji) == 1 and kralj in kartarji[0].pobrane) or preveri_valat():
+        kartarji[0].pobrane.extend(Talon)
+        Talon = []
 
+def bon(vrednost):
+    karte = Talon
+    sestevek = 0
+    pagat = 0
+    ultimo = 0
+    for oseba in Igralci:
+        if oseba.rufan == vrednost:
+            karte.extend(oseba.pobrane)
+            if oseba.pobran_pagat:
+                pagat = True
+            if oseba.pobran_kralj:
+                ultimo = True
+    if 1 in karte and 21 in karte and 22 in karte:
+        sestevek += 10 * napovedan_bonus('trula')
+    if 30 in karte and 38 in karte and 46 in karte and 54 in karte:
+        sestevek += 10 * napovedan_bonus('kralji')
+    if pagat:
+        sestevek += 25 * napovedan_bonus('pagat ultimo')
+    if ultimo:
+        sestevek += 10 * napovedan_bonus('kralj ultimo')
+    return sestevek
 
-
-
-
-
+def bonusi(sestevek):
+    sestevek + bon(True)- bon(False)
+    return sestevek
 
 
 
