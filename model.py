@@ -81,8 +81,8 @@ def primerjaj_karti(karta1, karta2):
         else:
             return karta2
 
-def zmagovalni_igralec():       # Preveri karte iz Kupa
-    karte = []      # Optimiziraj s tem da preveris ce je bila vsaj ena od teh kart igrana
+def zmagovalni_igralec(): 
+    karte = []
     for z in Igralci:
         karte.append(Kup[z])
     if 1 in karte and 21 in karte and 22 in karte:
@@ -106,8 +106,19 @@ def vrstni_red(zacne):
         Vrstni_red.append(Igralci[(indeks + i) % n])
     return Vrstni_red
 
-def legalna_izbira(prva, oseba, izbira):        # ZACASNA FUNKCIJA, DOPOLNI KASNEJE
-    return True
+def legalna_izbira(prva, oseba, izbira):
+    if tip_karte(izbira) == tip_karte(prva):
+        return True
+    if tip_karte(izbira) == "Tarok":
+        for x in oseba.roka:
+            if tip_karte(x) == tip_karte(prva):
+                return False
+        return True
+    else:
+        for x in oseba.roka:
+            if tip_karte(x) == tip_karte(prva) or tip_karte(x) == "Tarok":
+                return False
+        return True
 
 
 # Funkcije namenjene zacetku igre.
@@ -127,16 +138,19 @@ def delitev_kart():
 
     # Funkcije za prikaz in deljenje talona.
 
-def delitev_talona(igra):       # ZACASNA FUNKCIJA, dopolni ko bos dodal ostale igre!!!!!
-    if igra[1] == 1:
+def stevilo_zalozenih(igra):
+    izbira = igra[1]
+    if izbira == 1 or izbira == 4:
         return 3
-    if igra[1] == 2:
+    if izbira == 2 or izbira == 5:
         return 2
-    if igra[1] == 3:
+    if izbira == 3 or izbira == 6:
         return 1
+    else:
+        return 0
 
 def prikaz_talona(igra):        # ZACASNA FUNKCIJA
-    presek_talona = delitev_talona(igra)
+    presek_talona = stevilo_zalozenih(igra)
     prikaz_talona = ''
     for k in range(6 // presek_talona):
         por = del_talona(presek_talona, k)
@@ -166,27 +180,30 @@ def spremeni_talon(igra, k):
     Talon = nov_talon
 
 
-def talon_prevzem(rufer, n, k): # NA KONCU NAJ UGOTOVI A JE VALAT AL SE JE ZARUFU IN POBRAL KRALJA, DRUGACE DOBI NASPROTNIK VALATA
+def talon_prevzem(rufer, n, k):
     for oseba in Igralci:
         if oseba != rufer and oseba.rufan != 1:
             oseba.pobere_talon()
             break
 
-def stevilo_zalozenih(igra):
-    izbira = igra[1]
-    if izbira == 1 or izbira == 4:
-        return 3
-    if izbira == 2 or izbira == 5:
-        return 2
-    if izbira == 3 or izbira == 6:
-        return 1
+def legaln_polog(igra, karta):
+    if karta not in [1, 21, 22, 30, 38, 46, 54]:
+        if tip_karte(karta) == "Tarok":
+            for x in igra[0].roka:
+                if x != "Tarok" or x % 8 != 6:
+                    return False
+            return True
+        else:
+            return True
     else:
-        return 0
+        return True
 
-def legaln_polog(igra, karta): # NAPISI DEJANSKO FUNKCIJO
-    return True
-
-
+def preveri_fang():
+    for oseba in Igralci:
+        if 21 in oseba.roka:
+            oseba.ima_monda = True
+        if 22 in oseba.roka:
+            oseba.ima_monda = True
 
     # Funkcije za izbiro igre na zacetku
 
@@ -214,12 +231,16 @@ def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in ig
     else:
         return druga
 
-
+def igra_ima_talon(igra):
+    if igra[1] >= 1 and igra[1] <= 6:
+        return True
+    else:
+        return False
 
     # Funkcije za rufanje kralja
 
-def ima_rufanje(igra):      # Zacasna funkcija, dopolni za vse igre!!!!!!
-    if len(Igralci) == 4: 
+def ima_rufanje(igra):
+    if len(Igralci) == 4 and igra[1] in [1, 2, 3]: 
         return True
     else:
         return False
@@ -275,22 +296,7 @@ def vrednost_igre():
     for oseba in Igralci:
         izbira = oseba.vrsta_igre
         if izbira != 0:
-            if izbira == 1: # Tri
-                return 10 * napovedan_bonus(izbira)
-            if izbira == 2: # Dva
-                return 20 * napovedan_bonus(izbira)
-            if izbira == 3: # Ena
-                return 30 * napovedan_bonus(izbira)
-            if izbira == 4: # Solo tri
-                return 40 * napovedan_bonus(izbira)
-            if izbira == 5: # Solo dva
-                return 50 * napovedan_bonus(izbira)
-            if izbira == 6: # Solo ena
-                return 60 * napovedan_bonus(izbira)
-            if izbira == 7: # Solo brez
-                return 70 * napovedan_bonus(izbira)
-            if izbira == 8: # Berac
-                return 80 * napovedan_bonus(izbira)
+            return 10 * izbira
     return 0
 
 def igra_ima_tocke():
@@ -312,6 +318,7 @@ def preveri_valat():
         return True
     else:
         return False
+
 def dodeli_talon():
     global Talon
     kartarji = []
@@ -326,7 +333,9 @@ def dodeli_talon():
         Talon = []
 
 def bon(vrednost):
-    karte = Talon
+    karte = []
+    if vrednost == False:
+        karte.extend(Talon)
     sestevek = 0
     pagat = 0
     ultimo = 0
@@ -348,8 +357,7 @@ def bon(vrednost):
     return sestevek
 
 def bonusi(sestevek):
-    sestevek + bon(True)- bon(False)
-    return sestevek
+    return sestevek + bon(True)- bon(False)
 
 
 

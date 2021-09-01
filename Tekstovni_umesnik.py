@@ -5,14 +5,14 @@ def izbira_igre(prejsnja, igralec):
     if izbrana == 0:
         return prejsnja
     vrsta_igre = [igralec, izbrana]
-    if izbrana in {0, 1, 2, 3} and m.mocnejsa_izbira(prejsnja, vrsta_igre) == vrsta_igre and (izbrana != 1 or m.Igralci.index(igralec) == (len(m.Igralci) - 1)):
+    if m.mocnejsa_izbira(prejsnja, vrsta_igre) == vrsta_igre and (izbrana != 1 or m.Igralci.index(igralec) == (len(m.Igralci) - 1)):
         return vrsta_igre
     else:
         print('To ni dovoljen odgovor.') # Prikaz
         return izbira_igre(prejsnja, igralec)
 
 def rufanje_kralja(igra):
-    if m.ima_rufanje(igra[1]):
+    if m.ima_rufanje(igra):
         n = m.karta_v_stevilko(input('V katerem kralju gres igrat?')) # Input
         kralj = (22 + n * 8)
         igra[0].kralj = kralj
@@ -63,6 +63,7 @@ def konec_igre(): # PRESTEJ TOCKE, JIH ZAPISI, POKAZI KDO JE ZMAGAL, PELJI NA MA
         else:
             sestevek -= (35 - tocke)
     sestevek = m.bonusi(sestevek)
+    # Skisfang in Mondfang direkt odstej
     return sestevek
     # Reset
     # Display tock in zmage
@@ -76,9 +77,12 @@ def igra_taroka(zacne, krog=1):
         Red = m.vrstni_red(zacne)
         for oseba in Red:
             prikaz_kart(oseba)
-            izbira = oseba.roka[0] #int(input(f'{oseba}, igraj karto'))
             veljavna = False
+            i = 0 #ZA POSKUS SAMO
             while veljavna != True:
+                # izbira = int(input(f'{oseba}, igraj karto'))
+                izbira = oseba.roka[i] #ZA POSKUS SAMO
+                i += 1 #ZA POSKUS SAMO
                 if Red.index(oseba) == 0:
                     veljavna = True
                     prva_karta = izbira
@@ -98,14 +102,15 @@ def igra_taroka(zacne, krog=1):
             ind += 1
             if ind < len(m.Igralci):
                 pobrane += ', '
-        if krog == krog <= (54 - 6) // len(m.Igralci):
+        if krog == (54 - 6) // len(m.Igralci):
             if 1 in m.Kup:
                 zmagovalec.pobran_pagat = True
+            kralj = 0
             for oseba in m.Igralci:
                 if oseba.kralj != 0:
                     kralj = oseba.kralj
-                if kralj in m.Kup:
-                    zmagovalec.pobran_kralj = True
+            if kralj in m.Kup:
+                zmagovalec.pobran_kralj = True
         zmagovalec.pobere()
         print(f'zmagal/a je {zmagovalec}, pobral/a je {pobrane}')
         return igra_taroka(zmagovalec, krog + 1)
@@ -114,6 +119,7 @@ def igra_taroka(zacne, krog=1):
 
 
 def zacetek():
+    # Resetiraj vse
     m.delitev_kart()
     prikaz_kart() # PRIKAZI KARTE
     igra = [m.Igralci[0],0]
@@ -125,13 +131,15 @@ def zacetek():
     porufan = rufanje_kralja(igra)
     if porufan != None:
         porufan.rufan = True
-    moznosti = m.prikaz_talona(igra)
-    print(moznosti) # Prikaz
-    izbira_talona = input('Pred tabo je talon, izberi karte.') # Input
-    rufer.doda_karte(m.del_talona(m.delitev_talona(igra),int(izbira_talona) - 1))
-    m.spremeni_talon(igra, izbira_talona)
-    odstrani_karte(igra)
-    # Napovedi()
+    if m.igra_ima_talon(igra):
+        moznosti = m.prikaz_talona(igra)
+        print(moznosti) # Prikaz
+        izbira_talona = input('Pred tabo je talon, izberi karte.') # Input
+        rufer.doda_karte(m.del_talona(m.stevilo_zalozenih(igra),int(izbira_talona) - 1))
+        m.spremeni_talon(igra, izbira_talona)
+        odstrani_karte(igra)
+        # Napovedi()
+    m.preveri_fang()
     return igra_taroka(rufer)
     
 
