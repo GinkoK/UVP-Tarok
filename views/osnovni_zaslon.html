@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Tarok!</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" 
+		rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" 
+		crossorigin="anonymous">
+	</head>
+<body>
+    <div class="d-flex justify-content-center">
+        <h1 class="display-1">TAROK</h1>
+    </div>
+    % if not uporabnik:
+    <p class="lead d-flex justify-content-center">Prijavi se in začni igro z do štirimi igralci.</p>
+    <div class="d-flex justify-content-center" >
+        <div>
+        <a class="btn btn-primary btn-lg" href="/prijava/" role="button">Prijava</a>
+        <a class="btn btn-outline-primary btn-lg" href="/registracija/" role="button">Registracija</a>
+        </div>
+    </div>
+    % end
+    % if uporabnik:
+    <p class="lead d-flex justify-content-center">Začni igro z do štirimi igralci.</p>
+    <div class="d-flex justify-content-center" >
+        <div>
+        <a class="btn btn-primary btn-lg" href="/igra/" role="button">Igra</a>
+        <a class="btn btn-outline-primary btn-lg" href="/odjava/" role="button">Odjava</a>
+        </div>
+    </div>
+    % end
+</body>
+</html>

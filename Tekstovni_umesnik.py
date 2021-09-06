@@ -11,6 +11,11 @@ def izbira_igre(prejsnja, igralec):
         print('To ni dovoljen odgovor.') # Prikaz
         return izbira_igre(prejsnja, igralec)
 
+
+
+
+
+
 def rufanje_kralja(igra):
     if m.ima_rufanje(igra):
         n = m.karta_v_stevilko(input('V katerem kralju gres igrat?')) # Input
@@ -23,6 +28,10 @@ def rufanje_kralja(igra):
         return igra[0]
     else:
         return None
+
+
+
+
 
 def odstrani_karte(igra): # SPREMENI V SPLETNEM VMESNIKU, DOVOLI SAMO LEGALNE IZBIRE IN PAZI DA PRETVORIS IZ KARTE V POZICIJO PRAVILNO
     for x in range(m.stevilo_zalozenih(igra)):
@@ -37,6 +46,12 @@ def odstrani_karte(igra): # SPREMENI V SPLETNEM VMESNIKU, DOVOLI SAMO LEGALNE IZ
         else:
             pass # POSKRBI DA LAHKO SAMO LEGALNE IZBERE
 
+
+
+
+
+
+
 def prikaz_kart(o=None): # ZACASNA FUNKCIJA
     if o in m.Igralci:
         print(f'{o}:')
@@ -45,6 +60,9 @@ def prikaz_kart(o=None): # ZACASNA FUNKCIJA
         for x in m.Igralci:
             print(f'{x}:')
             print(x.roka)
+
+
+
 
 def konec_igre(): # PRESTEJ TOCKE, JIH ZAPISI, POKAZI KDO JE ZMAGAL, PELJI NA MAIN SCREEN
     sestevek = 0
@@ -69,6 +87,9 @@ def konec_igre(): # PRESTEJ TOCKE, JIH ZAPISI, POKAZI KDO JE ZMAGAL, PELJI NA MA
     # Display tock in zmage
     # Zapis v datoteko
     # Main menu
+
+
+
 
 
 
@@ -131,6 +152,7 @@ def zacetek():
     porufan = rufanje_kralja(igra)
     if porufan != None:
         porufan.rufan = True
+
     if m.igra_ima_talon(igra):
         moznosti = m.prikaz_talona(igra)
         print(moznosti) # Prikaz

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Tarok!</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+		<style>
+			body {
+				background-image: url("slike/Melamine-wood-005.png");
+				background-repeat: repeat;
+			}
+		</style>
+
+		<div id="python" style="display:none">{{uporabnik}}</div>
+		<script>
+
+			function steviloIgralcev() {
+			  const xhttp = new XMLHttpRequest();
+			  xhttp.onload = function() {
+				document.getElementById("cakalnica").style.display = 'block'
+				var podat = parseInt(this.responseText)
+				document.getElementById("test").innerHTML = this.responseText;
+				if (parseInt(this.responseText) >= 4)  {
+					document.getElementById("cakalnica").style.display = 'none';
+					document.getElementById("igra").style.display = 'block';
+					clearTimeout(time);
+					return Igra();
+				}
+			  }
+			  xhttp.open("GET", "cakajoci.txt");
+			  xhttp.send();
+			  time = setTimeout(steviloIgralcev, 2000);
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+			function Uporabnik() {
+				let uporabnik = document.getElementById('python').textContent
+				return uporabnik
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+			function Igra() {
+				let uporabnik = Uporabnik();
+				const xhttp = new XMLHttpRequest();
+			  xhttp.onload = function() {
+
+
+				stanje = JSON.parse(this.responseText);
+				stevilo_kart = stanje[uporabnik].length
+
+				for (let i = 0; i < 12; i++) {
+					let gumb = 'gumb';
+					gumb += String(i+1);
+					if (i < stevilo_kart) {
+					document.getElementById(gumb).innerHTML ='<img src = "slike/karte/' + String(stanje[uporabnik][i]) + '.jpg" class="border rounded-lg " style="height: 100%;" alt="'+ String(stanje[uporabnik][i]) +'">';
+					document.getElementById(gumb).value = String(stanje[uporabnik][i]);
+					} else {
+						document.getElementById(gumb).style.display = 'none';
+					}
+				}	
+
+
+				document.getElementById("igra").style.display = 'block'
+
+				if (stanje.konec == true) {
+
+					document.getElementById("rufanje").style.display = 'none';
+					document.getElementById("talon").style.display = 'none';
+					document.getElementById("prikaz_kralja").style.display = 'none'
+					document.getElementById("klicanje").style.display = 'none';
+
+					document.getElementById("konec").style.display = 'block'
+					if (stanje.rezultat == true) {
+					document.getElementById("rezultat").innerHTML = "Igra je uspela"
+					} else {
+					document.getElementById("rezultat").innerHTML = "Igra ni uspela"
+					}
+
+
+					document.getElementById("tocke").innerHTML = "Aktivni igralec je zbral " + stanje.tocke + " točk"
+
+
+
+				} else if (stanje.zacetek == true) {
+					
+					document.getElementById("rufanje").style.display = 'none';
+					document.getElementById("talon").style.display = 'none';
+					document.getElementById("prikaz_kralja").style.display = 'none'
+					document.getElementById("klicanje").style.display = 'none';
+
+					let Kup = stanje.kup;
+					let stevilo_kup = Kup.length;
+
+					document.getElementById("kup").style.display = 'block';
+					for (let i = 0; i < 4; i++) {
+					let gumb = 'kup';
+					gumb += String(i+1);
+					if (i < stevilo_kup) {
+					document.getElementById(gumb).style.display = 'block';
+					document.getElementById(gumb).innerHTML = '<img src = "slike/karte/' + String(stanje.kup[i]) + '.jpg" class="border rounded-lg " style="height: 100%;" alt="'+ String(stanje.kup[i]) +'">';
+					} else {
+						document.getElementById(gumb).style.display = 'none';
+					}
+				}
+
+						let izbran_talon = stanje.izbira;
+						let dolzina_novih = izbran_talon.length;
+
+					if (uporabnik == stanje.trenutni) {
+
+
+
+						for (let i = 0; i <  12 + dolzina_novih; i++) {
+						let gumb = 'gumb';
+						gumb += String(i+1);
+						document.getElementById(gumb).disabled = false;
+						} 
+					} else {
+
+						for (let i = 0; i <  12 + dolzina_novih; i++) {
+						let gumb = 'gumb';
+						gumb += String(i+1);
+						document.getElementById(gumb).disabled = true;
+					}
+
+					}
+
+
+
+
+
+				//} else if (stanje.polozene == true) {
+
+
+
+
+
+				} else if (stanje.zalaganje != false) {
+
+					document.getElementById("rufanje").style.display = 'none';
+					document.getElementById("klicanje").style.display = 'none';
+					document.getElementById("meja1").style.display = 'none'
+					document.getElementById("meja2").style.display = 'none'
+					document.getElementById("meja3").style.display = 'none'
+					document.getElementById("meja4").style.display = 'none'
+					document.getElementById("meja5").style.display = 'none'
+
+
+
+					let izbran_talon = stanje.izbira;
+					let dolzina_novih = izbran_talon.length;
+
+					if (uporabnik == stanje.trenutni) {
+					
+						for (let i = 0; i < 6; i++) {
+						let talon = 'talon';
+						talon += String(i+1);
+						document.getElementById(talon).disabled = true;
+					}
+					for (let i = 0; i < dolzina_novih; i++) {
+						nova_karta = "dodan_talon_";
+						gumb = "gumb";
+						nova_karta += String(i+1);
+						gumb += String(13+i);
+						document.getElementById(gumb).innerHTML = '<img src = "slike/karte/' + String(izbran_talon[i]) + '.jpg" class="border rounded-lg " style="height: 100%;" alt="'+ String(izbran_talon[i]) +'">';
+						document.getElementById(nova_karta).style.display = 'block';
+						document.getElementById(gumb).value = String(izbran_talon[i]);
+						console.log(izbran_talon[i])
+					}
+
+					for (let i = 0; i <  12 + dolzina_novih; i++) {
+						let gumb = 'gumb';
+						gumb += String(i+1);
+						document.getElementById(gumb).disabled = false;
+					}
+
+					let odlozene = stanje.odstranjene;
+					let dolzina_odstranjenih = odlozene.length;
+
+					for (j = 0; j < dolzina_odstranjenih; j++) {
+						for (let i = 0; i <  12 + dolzina_novih; i++) {
+							let gumb = "gumb";
+							gumb += String(i+1);
+							if(document.getElementById(gumb).value == String(odlozene[j])) {
+								document.getElementById(gumb).disabled = true;
+							}
+					}
+				}
+
+				} else {
+					document.getElementById("meja1").style.display = 'none'
+					let izbira = stanje.izbira
+					let dolzina_izbire = izbira.length
+					let izraz = ''
+					for (i=0; i < dolzina_izbire; i++) {
+						tal = "ostali_talon"
+						tal += String(i+1)
+						document.getElementById(tal).innerHTML = '<img src = "slike/karte/' + String(izbira[i]) + '.jpg" class="border rounded-lg " style="height: 5em;" alt="'+ String(izbira[i]) +'">'
+					}
+				}
+
+
+
+				} else if (stanje.talon != false) {
+
+					let tren = stanje.trenutna_igra
+					console.log(tren[1])
+					if (tren[1] == "Ena" || tren[1] == "Solo ena") {
+						document.getElementById("meja1").style.display = 'block'
+						document.getElementById("meja2").style.display = 'block'
+						document.getElementById("meja3").style.display = 'block'
+						document.getElementById("meja4").style.display = 'block'
+						document.getElementById("meja5").style.display = 'block'
+					} else if (tren[1] == "Dva" || tren[1] == "Solo dva") {
+						document.getElementById("meja2").style.display = 'block'
+						document.getElementById("meja4").style.display = 'block'
+					} else if (tren[1] == "Tri" || tren[1] == "Solo tri") {
+						document.getElementById("meja3").style.display = 'block'
+					}
+
+					document.getElementById("rufanje").style.display = 'none';
+					document.getElementById("klicanje").style.display = 'none';
+					document.getElementById("talon").style.display = 'block'
+					if (stanje.kralj != false) {
+					document.getElementById("prikaz_kralja").style.display = 'block';
+					if (stanje.kralj == "Kriz") {
+					document.getElementById("prikazan_kralj").innerHTML = "Izbran kralj je: Križ" ;
+					} else{
+					document.getElementById("prikazan_kralj").innerHTML = "Izbran kralj je: " + stanje.kralj;
+						}
+					}
+					let dolzina = stanje.talon[0].length;
+					let poln_talon = [];
+					for (let i = 0; i < (6 / dolzina); i++) {
+						for (let j = 0; j < (dolzina); j++) {
+							poln_talon[dolzina*i+j] = stanje.talon[i][j]
+							console.log(poln_talon)
+						}
+					}
+					for (let i = 0; i < 6; i++) {
+						let talon = 'talon';
+						talon += String(i+1);
+						document.getElementById(talon).innerHTML = '<img src = "slike/karte/' + String(poln_talon[i]) + '.jpg" class="border rounded-lg " style="height: 100%;" alt="'+ String(poln_talon[i]) +'">';
+						document.getElementById(talon).value = i;
+						}
+					if (uporabnik == stanje.trenutni) {
+						for (let i = 0; i < 6; i++) {
+						let talon = 'talon';
+						talon += String(i+1);
+						document.getElementById(talon).disabled = false;
+						}
+
+					}
+
+
+
+
+				 }else if (stanje.rufanje == true) {
+
+					document.getElementById("klicanje").style.display = 'none';
+
+					if (uporabnik == stanje.trenutni) {
+						document.getElementById("rufanje").style.display = 'block';
+					}
+
+
+
+
+				} else {
+					if (stanje.trenutna_igra != false) {
+						document.getElementById("prikaz_izbranih").innerHTML = stanje.trenutna_igra[0] + ' je klical/a: ' + stanje.trenutna_igra[1];
+					}
+
+					if (stanje.obvezen == uporabnik){
+						document.getElementById("tri").style.display = 'block';
+					}
+					document.getElementById("klicanje").style.display = 'block';
+					if (uporabnik == stanje.trenutni) {
+						document.getElementById("izberi_igro").disabled = false;
+					}
+				}
+
+			} 
+			  xhttp.open("GET", "igra.json");
+			  xhttp.send();
+			  time = setTimeout(Igra, 3000); 
+			}
+			steviloIgralcev();
+
+			function izkljuci(gumb) {
+				document.getElementById(gumb).disabled = true;
+			}
+		</script>
+	</head>
+	<body>
+
+
+		<div id="cakalnica" style="display:none">
+			<div class="container-sm bg-light text-dark rounded-bottom p-5">
+			<h1 class="display-1">
+			Trenutno ste v cakalnici. Vseh vas je:
+			</h1>
+			<h1 id="test" class="display-1">1</h1>
+			</div>
+		</div>
+
+		<div id="konec" style="display:none">
+			<div class="m-4 col-sm-11 d-flex justify-content-end fixed-top" style="position: absolute;">
+			<div class="bg-light text-dark card p-3 m-1">
+			<div id="rezultat"></div>
+			<div id="tocke"></div>
+				<div>
+					<a class="btn btn-primary btn-lg" href="/" role="button">Nazaj</a>
+				</div>
+			</div>
+			</div>
+		</div>
+
+		<div id="klicanje" style="display:none">
+		<div class="m-4 col-sm-11 d-flex justify-content-end fixed-top" style="position: absolute;">
+		<div class="bg-light text-dark card p-3 m-1">
+			<form method="POST">
+				<input type="radio" id="igra0" name="igra" value="0">
+				<label for="igra0">Nič</label><br>
+
+				<div style="display:none" id="tri">
+				<input type="radio" id="igra1" name="igra" value="1">
+				<label for="igra1">Tri</label><br>
+				</div>
+
+				<input type="radio" id="igra2" name="igra" value="2">
+				<label for="igra2">Dva</label><br>
+				
+				<input type="radio" id="igra3" name="igra" value="3">
+				<label for="igra3">Ena</label><br>
+
+				<input type="radio" id="igra4" name="igra" value="4">
+				<label for="igra4">Solo tri</label><br>
+
+				<input type="radio" id="igra5" name="igra" value="5">
+				<label for="igra5">Solo dva</label><br>
+
+				<input type="radio" id="igra6" name="igra" value="6">
+				<label for="igra6">Solo ena</label><br><br>
+
+				<button type="submit" disabled id="izberi_igro">Izberi</button>
+			  </form>
+			  <div id="prikaz_izbranih"></div>
+		</div>
+		</div>
+		</div>
+
+		<div id="rufanje" style="display:none">
+		<div class="m-4 col-sm-11 d-flex justify-content-end fixed-top" style="position: absolute;">
+		<div class="bg-light text-dark card p-3 m-1">
+		<form method="POST">
+			<input type="radio" id="src" name="kralj" value="1">
+			<label for="src">Src</label><br>
+			<input type="radio" id="kriz" name="kralj" value="4">
+			<label for="kriz">Križ</label><br>
+			<input type="radio" id="pik" name="kralj" value="3">
+			<label for="pik">Pik</label><br>
+			<input type="radio" id="kara" name="kralj" value="2">
+			<label for="kara">Kara</label><br><br>
+			<button type="submit" id="izberi_kralja" onclick="izkljuci(izberi_kralja)">Izberi</button>
+		</form>
+		</div>
+		</div>
+		</div>
+		</div>
+		
+
+
+
+
+	<div class="fixed-bottom p-4" >
+		<div class="m-4 pb-5 d-flex justify-content-center">
+		<div id="kup" style="display:none">
+			<form>
+			<div class="d-flex justify-content-center">
+			<button id="kup1" disabled class="btn m-3 p-0" style=" height:200px;width:110px;background-color:#ebe8d6"></button>
+			<button id="kup2" disabled class="btn m-3 p-0" style=" height:200px;width:110px;background-color:#ebe8d6"></button>
+			<button id="kup3" disabled class="btn m-3 p-0" style=" height:200px;width:110px;background-color:#ebe8d6"></button>
+			<button id="kup4" disabled class="btn m-3 p-0" style=" height:200px;width:110px;background-color:#ebe8d6"></button>
+			</div>
+			</form>
+		</div>
+		</div>
+
+		<div id="talon" style="display:none">
+			<form method="POST">
+				<div class="m-4 pb-5 d-flex justify-content-center">
+				<button name='talon' id="talon1" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				<div id="meja1" class="border-left" style="display:none"></div>
+				<button name='talon' id="talon2" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				<div id="meja2" class="border-left" style="display:none"></div>
+				<button name='talon' id="talon3" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				<div id="meja3" class="border-left" style="display:none"></div>
+				<button name='talon' id="talon4" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				<div id="meja4" class="border-left" style="display:none"></div>
+				<button name='talon' id="talon5" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				<div id="meja5" class="border-left" style="display:none"></div>
+				<button name='talon' id="talon6" disabled class="btn m-3 p-0" style=" height:200px;width:105px;background-color:#ebe8d6"></button>
+				</div>
+			</form>
+		</div>
+		<div style="display:none" class="d-flex justify-content-center">
+		<div id="ostali_talon" class="d-flex justify-content-center">
+			<div id="ostali_talon1"></div><div id="ostali_talon2"></div><div id="ostali_talon3"></div>
+		</div>
+		</div>
+		<div id="prikaz_kralja" style="display:none">
+			<div>
+			<div class="d-flex justify-content-center">
+			<div id="prikazan_kralj" class="bg-light text-dark card p-3 m-1 "></div>
+			</div>
+			</div>
+			</div>
+		<div id="igra" style="display:none">
+			<form method="POST">
+				<div class="m-4">
+				<div class="d-flex justify-content-center">
+				<div>
+				<button name='karta' id="gumb1" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb3" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb2" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb4" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb5" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb6" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb7" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb8" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb9" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb10" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb11" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<button name='karta' id="gumb12" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				<div class="d-flex justify-content-center">
+				<div id="dodan_talon_1" style="display:none">
+					<button name='karta' id="gumb13" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				</div>
+				<div id="dodan_talon_2" style="display:none">
+					<button name='karta' id="gumb14" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				</div>
+				<div id="dodan_talon_3" style="display:none">
+					<button name='karta' id="gumb15" disabled class=" btn btn-secondary m-1 p-0 " style=" height:110px;width:60px;background-color:#ebe8d6"></button>
+				</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	</body>
+</html>

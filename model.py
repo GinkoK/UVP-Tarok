@@ -1,13 +1,24 @@
 import json
 import random
+import hashlib
 
 Talon = []      # Talon je seznam nastavljen pred zacetkom igre
 Kup = {}        # Slovar kart in igralcev ki so jih igrali, vsak krog se resetira na prazen slovar
 Igralci = []    # Seznam igralcev, v vrstnem redu
 Napovedi = []
+Trenutni_igralec = None
+izbrana_igra = []
+Vrstni_red = []
+Prva = 0
+
+DATOTEKA = "podatki.json"
+DAT_IGRALCI = "cakajoci.txt"
+DAT_IGRA = "igra.json"
 
 class Igralec:
-    def __init__(self, ime):
+    def __init__(self, ime, zasifrirano_geslo):
+        self.zasifrirano_geslo = zasifrirano_geslo
+        self.tocke = 0
         self.roka = []                  # Seznam kart, t.j. stevilk od 1 do 54, ki jih igralec drzi v roki.
         self.ime = ime                  # Ime igralca je niz, sluzi le za prikaz in shranjevanje podatkov, v igri se ne uporablja.
         self.pobrane = []
@@ -18,7 +29,6 @@ class Igralec:
         self.vrsta_igre = 0      # Podobno kot zgoraj ampak za celo trulo
         self.pobran_pagat = False
         self.pobran_kralj = False
-        Igralci.append(self)
 
     def __repr__(self):
         return self.ime
@@ -44,6 +54,78 @@ class Igralec:
         global Talon
         self.pobrane.extend(Talon)
         Talon = []
+
+
+    def v_slovar(self):
+        return {
+            "uporabnisko_ime": self.ime,
+            "zasifrirano_geslo": self.zasifrirano_geslo,
+            "tocke": self.tocke
+        }
+
+    @staticmethod
+    def registracija(uporabnisko_ime, geslo_v_cistopisu):
+
+        if Igralec.preberi_iz_datoteke(uporabnisko_ime) != None:
+            raise ValueError("Uporabniško ime že obstaja!")
+        else:
+            zasifrirano_geslo = Igralec.zasifriraj_geslo(geslo_v_cistopisu)
+            uporabnik = Igralec(uporabnisko_ime, zasifrirano_geslo)
+            uporabnik.shrani_v_datoteko()
+            return uporabnik
+
+    @staticmethod
+    def iz_slovarja(slovar):
+        uporabnisko_ime = slovar["uporabnisko_ime"]
+        zasifrirano_geslo = slovar["zasifrirano_geslo"]
+        tocke = slovar["tocke"]
+        uporabnik = Igralec(uporabnisko_ime, zasifrirano_geslo)
+        uporabnik.tocke = tocke
+        return uporabnik
+
+    def shrani_v_datoteko(self):
+        with open(DATOTEKA, 'r') as dat:
+            slovar_vseh = json.load(dat)
+        with open(DATOTEKA, 'w') as dat:
+            slovar = self.v_slovar()
+            slovar_vseh[self.ime] = slovar
+            json.dump(slovar_vseh, dat)
+
+    @staticmethod
+    def preberi_iz_datoteke(uporabnisko_ime):
+        try:
+            with open(DATOTEKA) as dat:
+                slovar_vseh = json.load(dat)
+                if uporabnisko_ime in slovar_vseh:
+                    slovar = slovar_vseh[uporabnisko_ime]
+                    return Igralec.iz_slovarja(slovar)
+                else:
+                    return None
+        except FileNotFoundError:
+            return None
+
+    def zasifriraj_geslo(geslo_v_cistopisu, sol=None):
+        if sol is None:
+            sol = str(random.getrandbits(32))
+        posoljeno_geslo = sol + geslo_v_cistopisu
+        h = hashlib.blake2b()
+        h.update(posoljeno_geslo.encode(encoding="utf-8"))
+        return f"{sol}${h.hexdigest()}"
+
+    def preveri_geslo(self, geslo_v_cistopisu):
+        sol = self.zasifrirano_geslo.split("$")[0]
+        return self.zasifrirano_geslo == Igralec.zasifriraj_geslo(geslo_v_cistopisu, sol)
+
+    @staticmethod
+    def prijava(uporabnisko_ime, geslo_v_cistopisu):
+        uporabnik = Igralec.preberi_iz_datoteke(uporabnisko_ime)
+        if uporabnik is None:
+            raise ValueError("Uporabniško ime ne obstaja!")
+        elif uporabnik.preveri_geslo(geslo_v_cistopisu):
+            return uporabnik        
+        else:
+            raise ValueError("Geslo je napačno!")
+
 
 
 # Funkcije namenjene sami igri
@@ -149,7 +231,7 @@ def stevilo_zalozenih(igra):
     else:
         return 0
 
-def prikaz_talona(igra):        # ZACASNA FUNKCIJA
+def prikaz_talona(igra):        # SAMO ZA TEKSTOVNI VMESNIK
     presek_talona = stevilo_zalozenih(igra)
     prikaz_talona = ''
     for k in range(6 // presek_talona):
@@ -196,7 +278,7 @@ def legaln_polog(igra, karta):
         else:
             return True
     else:
-        return True
+        return False
 
 def preveri_fang():
     for oseba in Igralci:
@@ -208,28 +290,33 @@ def preveri_fang():
     # Funkcije za izbiro igre na zacetku
 
 def prioritetni_igralec(prvi, drugi):
-    if Igralci.index(drugi) == (len(Igralci) - 1):
-        return drugi
+    for x in Igralci:
+        if x.ime == drugi.ime:
+            indeks_drugega = Igralci.index(x)
+        if x.ime == prvi.ime:
+            indeks_prvega = Igralci.index(x)
+    if indeks_drugega == (len(Igralci) - 1):
+        return True
     else:
-        if Igralci.index(prvi) < Igralci.index(drugi):
-            return prvi
+        if indeks_prvega < indeks_drugega:
+            return False
         else:
-            return drugi
+            return True
 
 
 def mocnejsa_izbira(prva, druga):      # prva in druga sta seznama igralca in igre (npr. [Andrej, 2]), funkcije najde kdo ima prednost za izbiro igre na zacetku
     if prva[1] == 0:
-        return druga
+        return True
     elif druga[1] == 0:
-        return prva
-    elif prva[1] > druga[1]:        # Igre grejo po vrsti od najsibkejse do najmocnejse: 0 ni igra, 1 je tri, 2 je dva, 1 je tri, ...
-        return prva
+        return False
+    elif prva[1] > druga[1]:
+        return False
     elif druga[1] > prva[1]:
-        return druga
-    elif prioritetni_igralec(prva[0], druga[0]) == prva[0]:
-        return prva
+        return True
+    elif prioritetni_igralec(prva[0], druga[0]):
+        return True
     else:
-        return druga
+        return False
 
 def igra_ima_talon(igra):
     if igra[1] >= 1 and igra[1] <= 6:
@@ -240,21 +327,10 @@ def igra_ima_talon(igra):
     # Funkcije za rufanje kralja
 
 def ima_rufanje(igra):
-    if len(Igralci) == 4 and igra[1] in [1, 2, 3]: 
+    if igra[1] in [1, 2, 3]: 
         return True
     else:
         return False
-
-def karta_v_stevilko(ime):      # Zacasna funkcija, izbrisi pol
-    if ime.lower() == "src":
-        return 1
-    if ime.lower() == "kara":
-        return 2
-    if ime.lower() == "pik":
-        return 3
-    if ime.lower() == "kriz":
-        return 4
-    
 
 # Konec igre
 
@@ -269,7 +345,7 @@ def vrednost_karte(karta):
         return 1
 
 
-def tocke():
+def tockovanje():
     tocke = 0
     karte_za_stet = []
     for oseba in Igralci:
@@ -359,15 +435,218 @@ def bon(vrednost):
 def bonusi(sestevek):
     return sestevek + bon(True)- bon(False)
 
+def resetiraj():
+    global Talon, Kup, Napovedi, Trenutni_igralec, izbrana_igra, Vrstni_red, Prva
+    Talon = []
+    Kup = {}
+    Napovedi = []
+    Trenutni_igralec = None
+    izbrana_igra = []
+    Vrstni_red = []
+    Prva = 0
+    for oseba in Igralci:
+        oseba.roka = []                  # Seznam kart, t.j. stevilk od 1 do 54, ki jih igralec drzi v roki.
+        oseba.pobrane = []
+        oseba.rufan = False
+        oseba.kralj = 0
+        oseba.ima_monda = False
+        oseba.ima_skisa = False
+        oseba.vrsta_igre = 0
+        oseba.pobran_pagat = False
+        oseba.pobran_kralj = False
+    
 
 
 
+# IZOGIBANJE BOTTLA PREK JSONA Z JAVASCRIPTOM
 
+def shrani_stevilo():
+    with open(DAT_IGRALCI, 'w') as dat:
+        info = str(len(Igralci))
+        dat.write(info)
+    print(Igralci)
 
+def zapis_kart():
+    with open(DAT_IGRA, 'w') as dat:
+        slovar = {}
+        slovar["trenutni"] = Igralci[0].ime
+        for oseba in Igralci:
+            slovar[oseba.ime] = oseba.roka
+        slovar["rufanje"] = False
+        slovar["talon"] = False
+        slovar["zalaganje"] = False
+        slovar["polozene"] = False
+        slovar["zacetek"] = False
+        slovar["krog"] = 0
+        slovar["konec"] = False
+        slovar["obvezen"] = Igralci[len(Igralci)-1].ime
+        slovar["trenutna_igra"] = False
+        slovar["izbira"] = False
+        slovar["odstranjene"] = []
+        slovar["kup"] = []
+        slovar["rezultat"] = False
+        slovar["tocke"] = 0
+        slovar["kralj"] = False
+        json.dump(slovar, dat)
 
+def zapis_v_json(atribut, sprememba):
+    with open(DAT_IGRA, 'r') as dat:
+        trenutni = json.load(dat)
+    with open(DAT_IGRA, 'w') as dat:
+        trenutni[atribut] = sprememba
+        json.dump(trenutni, dat)
 
+def ime_igre(num):
+    stevilo = int(num)
+    if stevilo == 0:
+        return "Nič"
+    if stevilo == 1:
+        return "Tri"
+    if stevilo == 2:
+        return "Dva"
+    if stevilo == 3:
+        return "Ena"
+    if stevilo == 4:
+        return "Solo tri"
+    if stevilo == 5:
+        return "Solo dva"
+    if stevilo == 6:
+        return "Solo ena"
 
+def naslednji_izbira():
+    global Trenutni_igralec, izbrana_igra
+    indeks = (Igralci.index(Trenutni_igralec) + 1) % (len(Igralci))
+    Trenutni_igralec = Igralci[indeks]
+    if Trenutni_igralec.ime == Igralci[0].ime:
+        if izbrana_igra[1] == 0:
+            izbrana_igra[1] = 1
+            izbrana_igra[0] = Igralci[len(Igralci)-1]
+        rufer = izbrana_igra[0]
+        rufer.vrsta_igre = izbrana_igra[1]
+        rufer.rufan = True
+        if ima_rufanje(izbrana_igra):
+            zapis_v_json("rufanje", True)
+        else:
+            izbor_talona()
+        Trenutni_igralec = rufer
+    zapis_v_json("trenutna_igra", [izbrana_igra[0].ime, ime_igre(izbrana_igra[1])])
+    zapis_v_json("trenutni", Trenutni_igralec.ime)
 
+def izbor_talona():
+    if True: #igra_ima_talon():
+        delitev = stevilo_zalozenih(izbrana_igra)
+        delitev_talona = []
+        for k in range(6 // delitev):
+            delitev_talona.append(del_talona(delitev, k))
+        zapis_v_json("talon", delitev_talona)
+    
+def dodelitev_talona(izbira):
+    print(Trenutni_igralec.roka)
+    izbran_talon = del_talona(stevilo_zalozenih(izbrana_igra),int(izbira))
+    Trenutni_igralec.doda_karte(izbran_talon)
+    print(Trenutni_igralec.roka)
+    spremeni_talon(izbrana_igra, izbira)
+    zapis_v_json("zalaganje", stevilo_zalozenih(izbrana_igra))
+    zapis_v_json("izbira", izbran_talon)
 
+def polozi_karte(karta):
+    global Trenutni_igralec
+    Trenutni_igralec.roka.remove(karta)
+    with open(DAT_IGRA, 'r') as dat:
+        podatki = json.load(dat)
+        odstranjene = podatki["odstranjene"]
+    odstranjene.append(karta)
+    zapis_v_json("odstranjene", odstranjene)
+    if len(Trenutni_igralec.roka) == ((54 - 6) // len(Igralci)):
+        zapis_v_json(Trenutni_igralec.ime, Trenutni_igralec.roka)
+        #zapis_v_json("polozene", True)
+        Trenutni_igralec = Igralci[len(Igralci)-1]
+        zapis_v_json("zacetek", True)
+        zacetek_kroga()
 
+def dodaj_napovedi(napovedi):
+    global Trenutni_igralec, Napovedi
+    Napovedi = napovedi
+    Trenutni_igralec = Igralci[len(Igralci)-1] #Spremeni za ostale vrste igre
+    preveri_fang()
+    zapis_v_json("zacetek", True)
+    zacetek_kroga()
 
+def zacetek_kroga():
+    global Vrstni_red
+    Vrstni_red = vrstni_red(Trenutni_igralec)
+    zapis_v_json("trenutni", Trenutni_igralec.ime)
+    with open(DAT_IGRA, 'r') as dat:
+        podatki = json.load(dat)
+        krog = podatki["krog"]
+    if krog == ((54 - 6) // len(Igralci)):
+        return konec_igre()
+    else:
+        krog += 1
+        zapis_v_json("krog", krog)
+
+def poteza():
+    global Trenutni_igralec
+    igrane_karte = []
+    print(Kup)
+    for x in Kup:
+        igrane_karte.append(Kup[x])
+    print(igrane_karte)
+    zapis_v_json("kup", igrane_karte)
+    zapis_v_json(Trenutni_igralec.ime, Trenutni_igralec.roka)
+    indeks = Vrstni_red.index(Trenutni_igralec)
+    if indeks == (len(Igralci) - 1):
+        zmagovalec = zmagovalni_igralec()
+        zmagovalec.pobere()
+        Trenutni_igralec = zmagovalec
+        return zacetek_kroga()
+    else:
+        Trenutni_igralec = Vrstni_red[indeks+1]
+        zapis_v_json("trenutni", Trenutni_igralec.ime)
+
+def popravljen_talon(num):
+    stevilka = int(num)
+    n = int(izbrana_igra[1])
+    if n == 1 or n == 4:
+        if stevilka == 0 or stevilka == 1 or stevilka == 2:
+            return 0
+        else:
+            return 1
+    if n == 2 or n == 5:
+        if stevilka == 0 or stevilka == 1:
+            return 0
+        elif stevilka == 2 or stevilka == 3:
+            return 1
+        else:
+            return 2
+    else:
+        return stevilka
+
+def igra_se_je_zacela():
+    with open(DAT_IGRA, 'r') as dat:
+        podatki = json.load(dat)
+        zacela = podatki["zacetek"]
+    return zacela
+
+def konec_igre():
+    global Igralci
+    zapis_v_json("konec", True)
+    sestevek = 0
+    if preveri_valat():
+        sestevek = 250 * napovedan_bonus('valat')
+    dodeli_talon()
+    rezultat = tockovanje()[0]
+    tocke = tockovanje()[1]
+    if rezultat:
+        sestevek += vrednost_igre()
+    else:
+        sestevek -= vrednost_igre()
+    if igra_ima_tocke():
+        if rezultat:
+            sestevek += (tocke - 35)
+        else:
+            sestevek -= (35 - tocke)
+    sestevek = bonusi(sestevek)
+    zapis_v_json("rezultat", rezultat)
+    zapis_v_json("tocke", sestevek)
+    Igralci = []
